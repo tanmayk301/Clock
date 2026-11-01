@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Night Clock">
+<title>Night Clock</title>
+<style>
+html,body{margin:0;padding:0;height:100%;background:#000;color:#fff;overflow:hidden;
+  -webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:rgba(0,0,0,0);}
+body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;}
+#root{position:absolute;top:0;left:0;right:0;bottom:0;-webkit-transition:opacity 1.5s;transition:opacity 1.5s;}
+
+/* ---------- Background layers ---------- */
+#bg,#fx,#flash,#shade{position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;pointer-events:none;}
+.bgl{position:absolute;top:0;left:0;right:0;bottom:0;-webkit-transition:opacity 3s;transition:opacity 3s;}
+#fx.slant{-webkit-transform:rotate(12deg) scale(1.35);transform:rotate(12deg) scale(1.35);}
+#flash{background:#fff;opacity:0;}
+#shade{background:#000;opacity:0;-webkit-transition:opacity 2s;transition:opacity 2s;}
+
+.sun{position:absolute;top:-30vmin;right:-25vmin;width:90vmin;height:90vmin;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,244,200,.75) 0%,rgba(255,236,170,.25) 30%,rgba(255,236,170,0) 65%);}
+.sunlow{position:absolute;bottom:-45vmin;left:50%;margin-left:-60vmin;width:120vmin;height:90vmin;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(255,190,110,.75) 0%,rgba(255,150,90,.3) 35%,rgba(255,150,90,0) 70%);}
+.moon{position:absolute;top:6vmin;right:8vmin;width:9vmin;height:9vmin;border-radius:50%;background:#f4f1e6;
+  box-shadow:0 0 6vmin 2vmin rgba(240,240,220,.25);opacity:.9;}
+.star{position:absolute;border-radius:50%;background:#fff;}
+.cloud{position:absolute;left:0;border-radius:50%;}
+.drop{position:absolute;top:0;width:1px;background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(220,235,255,.9));}
+.flake{position:absolute;top:0;border-radius:50%;background:#fff;}
+.fog{position:absolute;left:-50vw;width:200vw;height:32vh;
+  background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,.22),rgba(255,255,255,0));}
+
+@-webkit-keyframes fall{from{-webkit-transform:translate3d(0,-20vh,0)}to{-webkit-transform:translate3d(0,125vh,0)}}
+@keyframes fall{from{transform:translate3d(0,-20vh,0)}to{transform:translate3d(0,125vh,0)}}
+@-webkit-keyframes snow{0%{-webkit-transform:translate3d(0,-5vh,0)}50%{-webkit-transform:translate3d(4vw,50vh,0)}100%{-webkit-transform:translate3d(-2vw,108vh,0)}}
+@keyframes snow{0%{transform:translate3d(0,-5vh,0)}50%{transform:translate3d(4vw,50vh,0)}100%{transform:translate3d(-2vw,108vh,0)}}
+@-webkit-keyframes drift{from{-webkit-transform:translate3d(-80vw,0,0)}to{-webkit-transform:translate3d(110vw,0,0)}}
+@keyframes drift{from{transform:translate3d(-80vw,0,0)}to{transform:translate3d(110vw,0,0)}}
+@-webkit-keyframes fogdrift{0%,100%{-webkit-transform:translate3d(-20vw,0,0)}50%{-webkit-transform:translate3d(20vw,0,0)}}
+@keyframes fogdrift{0%,100%{transform:translate3d(-20vw,0,0)}50%{transform:translate3d(20vw,0,0)}}
+@-webkit-keyframes twinkle{0%,100%{opacity:.9}50%{opacity:.15}}
+@keyframes twinkle{0%,100%{opacity:.9}50%{opacity:.15}}
+
+/* ---------- Content ---------- */
+#wrap{position:absolute;top:0;left:0;right:0;bottom:0;
+  display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;
+  -webkit-justify-content:center;justify-content:center;-webkit-align-items:center;align-items:center;
+  text-shadow:0 .2vmin 1.5vmin rgba(0,0,0,.35);-webkit-transition:color 2s;transition:color 2s;}
+.row{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;}
+.wrapr{-webkit-flex-wrap:wrap;flex-wrap:wrap;-webkit-justify-content:center;justify-content:center;}
+#time{font-size:22vmin;font-weight:100;line-height:1;letter-spacing:-.02em;}
+#ampm{font-size:4vmin;font-weight:200;margin-left:1.5vmin;-webkit-align-self:flex-end;align-self:flex-end;margin-bottom:3vmin;}
+#date{font-size:2.6vmin;font-weight:300;opacity:.85;margin-top:.3vmin;letter-spacing:.15em;text-transform:uppercase;}
+
+#now{margin-top:3vmin;font-weight:200;}
+#icon{font-size:8vmin;margin-right:2vmin;}
+#temp{font-size:9vmin;}
+#summary{margin-left:3vmin;line-height:1.35;}
+#cond{font-size:3.4vmin;font-weight:300;}
+#sub{font-size:2.2vmin;opacity:.85;}
+
+#tiles{margin-top:2.6vmin;width:96vmin;}
+.t{width:16.5vmin;margin:.6vmin;padding:1.1vmin 0;border-radius:1.6vmin;background:rgba(0,0,0,.22);text-align:center;}
+.tl{font-size:1.45vmin;letter-spacing:.12em;text-transform:uppercase;opacity:.75;}
+.tv{font-size:2.9vmin;font-weight:300;margin:.3vmin 0;white-space:nowrap;}
+.ts{font-size:1.5vmin;opacity:.75;white-space:nowrap;}
+.arr{display:inline-block;margin-right:.6vmin;}
+.dot{display:inline-block;width:1.3vmin;height:1.3vmin;border-radius:50%;margin-right:.8vmin;vertical-align:middle;}
+
+#bottom{margin-top:2.6vmin;padding:1.2vmin 1vmin;border-radius:1.6vmin;background:rgba(0,0,0,.22);}
+.h,.d{text-align:center;font-size:1.9vmin;}
+.h{width:8.5vmin;}
+.d{width:12vmin;}
+.h .i,.d .i{font-size:3.3vmin;margin:.5vmin 0;}
+.d .lo{opacity:.6;}
+.p{font-size:1.5vmin;opacity:.8;}
+#sep{width:1px;height:10vmin;background:rgba(255,255,255,.3);margin:0 1.5vmin;}
+
+#status{position:absolute;bottom:1.2vmin;right:2vmin;font-size:1.5vmin;opacity:.45;}
+
+/* Night mode */
+#wrap.night{color:#ff453a;}
+#wrap.night .i,#wrap.night #icon{-webkit-filter:grayscale(1) brightness(.7);opacity:.7;}
+</style>
+</head>
+<body>
+<div id="root">
+  <div id="bg"></div>
+  <div id="fx"></div>
+  <div id="flash"></div>
+  <div id="shade"></div>
+  <div id="wrap">
+    <div class="row"><div id="time">--:--</div><div id="ampm"></div></div>
+    <div id="date"></div>
+    <div id="now" class="row">
+      <div id="icon"></div>
+      <div id="temp">--°</div>
+      <div id="summary"><div id="cond">Loading weather…</div><div id="sub"></div></div>
+    </div>
+    <div id="tiles" class="row wrapr"></div>
+    <div id="bottom" class="row wrapr"><div id="hours" class="row"></div><div id="sep"></div><div id="days" class="row"></div></div>
+  </div>
+  <div id="status"></div>
+</div>
+
+<script>
+(function () {
+  // ===== SETTINGS =====
+  // URL options: ?lat=..&lon=..&name=City  &h12=1 (12-hour clock)
+  //   &fx=0 (no animations)  &red=0 (no red text at night)
+  //   &night=1 / &night=0 (force night mode on/off)
+  //   &scene=rain-day (force a background)  &demo=1 (cycle all backgrounds)
+  var NIGHT_START = 22, NIGHT_END = 6;
+  var WEATHER_EVERY_MIN = 15;
+  var DIM_LEVELS = [1, 0.6, 0.35, 0.18];
+
+  function param(k) {
+    var m = new RegExp('[?&]' + k + '=([^&#]*)').exec(location.search);
+    return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : null;
+  }
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+
+  var H12 = param('h12') === '1';
+  var FX = param('fx') !== '0';
+  var RED = param('red') !== '0';
+  var FORCE_NIGHT = param('night');
+  var FORCE_SCENE = param('scene');
+  var DEMO = param('demo') === '1';
+  var lat = param('lat') || store('nc_lat');
+  var lon = param('lon') || store('nc_lon');
+  var placeName = param('name') || store('nc_name') || '';
+  if (param('lat')) { store('nc_lat', lat); store('nc_lon', lon); store('nc_name', placeName); }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var DSHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+
+  // ===== Backgrounds =====
+  var GRAD = {
+    'clear-day':    ['#0f5bb5', '#3d93e6', '#93c8f5'],
+    'clear-night':  ['#02040f', '#0a1338', '#1c2a5e'],
+    'golden':       ['#26355f', '#b8606a', '#f4a259'],
+    'partly-day':   ['#2f659e', '#6f9fcc', '#b4cbe0'],
+    'partly-night': ['#04071a', '#121b38', '#283252'],
+    'cloudy-day':   ['#46586a', '#76899b', '#a6b3bf'],
+    'cloudy-night': ['#090e16', '#19222e', '#2b3543'],
+    'rain-day':     ['#222e3a', '#3f5164', '#617386'],
+    'rain-night':   ['#04070c', '#101925', '#202d3d'],
+    'storm':        ['#05060a', '#171a26', '#332f45'],
+    'fog-day':      ['#5a6164', '#879094', '#b2b8bb'],
+    'fog-night':    ['#0d0f11', '#20252a', '#383e43'],
+    'snow-day':     ['#58758f', '#93abc2', '#d3e0ec'],
+    'snow-night':   ['#0b121f', '#223147', '#465b75']
+  };
+  var SCENE_LIST = ['clear-day','partly-day','cloudy-day','golden','rain-day','storm','fog-day','snow-day',
+                    'clear-night','partly-night','cloudy-night','rain-night','fog-night','snow-night'];
+  var SCENE_CODE = { 'rain-day': 63, 'rain-night': 63, 'storm': 95 };
+  var curScene = null, lightningTimer = null;
+
+  function minutesOf(s) { return parseInt(s.substr(11, 2), 10) * 60 + parseInt(s.substr(14, 2), 10); }
+
+  function sceneFor(code, isDay, nowStr, rise, set) {
+    var base;
+    if (code === 0) base = 'clear';
+    else if (code <= 2) base = 'partly';
+    else if (code === 3) base = 'cloudy';
+    else if (code === 45 || code === 48) base = 'fog';
+    else if ((code >= 71 && code <= 77) || code === 85 || code === 86) base = 'snow';
+    else if (code >= 95) return 'storm';
+    else if (code >= 51) base = 'rain';
+    else base = 'cloudy';
+    if ((base === 'clear' || base === 'partly') && nowStr && rise && set) {
+      var n = minutesOf(nowStr);
+      if (Math.abs(n - minutesOf(rise)) <= 40 || Math.abs(n - minutesOf(set)) <= 40) return 'golden';
+    }
+    return base + (isDay ? '-day' : '-night');
+  }
+
+  function setScene(scene, code) {
+    if (scene === curScene) return;
+    curScene = scene;
+    var g = GRAD[scene] || GRAD['clear-day'];
+    var layer = document.createElement('div');
+    layer.className = 'bgl';
+    layer.style.backgroundImage = '-webkit-linear-gradient(top,' + g[0] + ' 0%,' + g[1] + ' 55%,' + g[2] + ' 100%)';
+    layer.style.backgroundImage = 'linear-gradient(to bottom,' + g[0] + ' 0%,' + g[1] + ' 55%,' + g[2] + ' 100%)';
+    layer.style.opacity = '0';
+    var bg = $('bg');
+    bg.appendChild(layer);
+    layer.offsetWidth; // force reflow so the fade runs
+    layer.style.opacity = '1';
+    setTimeout(function () { while (bg.firstChild && bg.firstChild !== layer) bg.removeChild(bg.firstChild); }, 3300);
+    buildFx(scene, code);
+  }
+
+  function el(cls, css) { var d = document.createElement('div'); d.className = cls; d.style.cssText = css; return d; }
+  function anim(name, dur, delay) {
+    var v = name + ' ' + dur.toFixed(2) + 's linear ' + delay.toFixed(2) + 's infinite';
+    return '-webkit-animation:' + v + ';animation:' + v + ';';
+  }
+
+  function buildFx(scene, code) {
+    var fx = $('fx'), f = document.createDocumentFragment(), i;
+    fx.innerHTML = ''; fx.className = '';
+    if (lightningTimer) { clearTimeout(lightningTimer); lightningTimer = null; }
+    $('flash').style.opacity = 0;
+    if (!FX) return;
+
+    function clouds(n, color) {
+      for (i = 0; i < n; i++) {
+        var w = rnd(45, 80), dur = rnd(120, 220);
+        f.appendChild(el('cloud', 'top:' + rnd(-10, 40).toFixed(1) + 'vh;width:' + w.toFixed(1) + 'vw;height:' + (w * 0.42).toFixed(1) + 'vw;' +
+          'background:radial-gradient(ellipse at center,' + color + ' 0%,rgba(0,0,0,0) 70%);' + anim('drift', dur, -rnd(0, dur))));
+      }
+    }
+    function stars(n) {
+      for (i = 0; i < n; i++) {
+        var s = rnd(1, 2.6).toFixed(1);
+        f.appendChild(el('star', 'left:' + rnd(0, 100).toFixed(1) + 'vw;top:' + rnd(0, 75).toFixed(1) + 'vh;width:' + s + 'px;height:' + s + 'px;' +
+          'opacity:' + rnd(0.3, 0.9).toFixed(2) + ';' + (i % 4 === 0 ? anim('twinkle', rnd(2, 5), -rnd(0, 5)) : '')));
+      }
+    }
+    function rain(n) {
+      fx.className = 'slant';
+      for (i = 0; i < n; i++) {
+        var d = rnd(0.5, 0.9);
+        f.appendChild(el('drop', 'left:' + rnd(-15, 115).toFixed(1) + 'vw;height:' + rnd(7, 13).toFixed(1) + 'vh;opacity:' + rnd(0.25, 0.6).toFixed(2) + ';' + anim('fall', d, -rnd(0, d))));
+      }
+    }
+    function snow(n) {
+      for (i = 0; i < n; i++) {
+        var s = rnd(3, 8).toFixed(1), d = rnd(7, 14);
+        f.appendChild(el('flake', 'left:' + rnd(0, 100).toFixed(1) + 'vw;width:' + s + 'px;height:' + s + 'px;opacity:' + rnd(0.5, 0.95).toFixed(2) + ';' + anim('snow', d, -rnd(0, d))));
+      }
+    }
+    function fog(n) { for (i = 0; i < n; i++) f.appendChild(el('fog', 'top:' + (10 + i * 28) + 'vh;' + anim('fogdrift', rnd(40, 70), -rnd(0, 60)))); }
+
+    var WHITE = 'rgba(255,255,255,.42)', NIGHTC = 'rgba(160,175,200,.16)', GREY = 'rgba(120,135,150,.38)';
+    var rainCount = (code >= 51 && code <= 57) ? 25 : (code === 65 || code === 67 || code === 82) ? 80 : 50;
+
+    switch (scene) {
+      case 'clear-day':    f.appendChild(el('sun', '')); break;
+      case 'clear-night':  stars(70); f.appendChild(el('moon', '')); break;
+      case 'partly-day':   f.appendChild(el('sun', '')); clouds(3, WHITE); break;
+      case 'partly-night': stars(40); f.appendChild(el('moon', '')); clouds(3, NIGHTC); break;
+      case 'cloudy-day':   clouds(5, WHITE); break;
+      case 'cloudy-night': clouds(5, NIGHTC); break;
+      case 'golden':       f.appendChild(el('sunlow', '')); clouds(2, 'rgba(255,205,175,.35)'); break;
+      case 'rain-day':     clouds(3, GREY); rain(rainCount); break;
+      case 'rain-night':   clouds(3, NIGHTC); rain(rainCount); break;
+      case 'storm':        clouds(3, 'rgba(90,95,120,.4)'); rain(70); lightning(); break;
+      case 'fog-day':
+      case 'fog-night':    fog(3); break;
+      case 'snow-day':     clouds(2, WHITE); snow(40); break;
+      case 'snow-night':   clouds(2, NIGHTC); snow(40); break;
+    }
+    fx.appendChild(f);
+  }
+
+  function lightning() {
+    lightningTimer = setTimeout(function () {
+      var fl = $('flash');
+      fl.style.opacity = 0.7;
+      setTimeout(function () { fl.style.opacity = 0; }, 80);
+      setTimeout(function () { fl.style.opacity = 0.45; }, 180);
+      setTimeout(function () { fl.style.opacity = 0; lightning(); }, 260);
+    }, rnd(5000, 14000));
+  }
+
+  // ===== Dimming / night mode =====
+  var dimIdx = -1, lastNight = null;
+  function isNight(h) {
+    if (FORCE_NIGHT === '1') return true;
+    if (FORCE_NIGHT === '0') return false;
+    return NIGHT_START > NIGHT_END ? (h >= NIGHT_START || h < NIGHT_END) : (h >= NIGHT_START && h < NIGHT_END);
+  }
+  function applyDim(h) {
+    var night = isNight(h);
+    $('wrap').className = night && RED ? 'night' : '';
+    $('shade').style.opacity = night ? 0.45 : 0;
+    if (night !== lastNight) { dimIdx = -1; lastNight = night; }
+    $('root').style.opacity = dimIdx < 0 ? (night ? 0.4 : 1) : DIM_LEVELS[dimIdx];
+  }
+  document.addEventListener('touchend', function (e) {
+    e.preventDefault();
+    dimIdx = (dimIdx + 1) % DIM_LEVELS.length;
+    applyDim(new Date().getHours());
+  }, false);
+
+  // ===== Clock =====
+  var startedAt = Date.now();
+  function tick() {
+    var d = new Date(), h = d.getHours(), m = d.getMinutes(), hh = h;
+    if (H12) { hh = h % 12; if (hh === 0) hh = 12; $('ampm').innerHTML = h < 12 ? 'AM' : 'PM'; }
+    $('time').innerHTML = (H12 ? hh : pad(hh)) + ':' + pad(m);
+    $('date').innerHTML = DAYS[d.getDay()] + ', ' + d.getDate() + ' ' + MONTHS[d.getMonth()];
+    applyDim(h);
+    if (h === 4 && m === 0 && d.getSeconds() < 2 && (Date.now() - startedAt) > 120000) location.reload();
+  }
+
+  // ===== Weather helpers =====
+  function wxInfo(code, day) {
+    if (code === 0) return [day ? '☀️' : '🌙', 'Clear'];
+    if (code === 1) return [day ? '🌤' : '🌙', 'Mostly clear'];
+    if (code === 2) return [day ? '⛅' : '☁️', 'Partly cloudy'];
+    if (code === 3) return ['☁️', 'Overcast'];
+    if (code === 45 || code === 48) return ['🌫', 'Fog'];
+    if (code >= 51 && code <= 57) return ['🌦', 'Drizzle'];
+    if (code === 61) return ['🌧', 'Light rain'];
+    if (code === 63) return ['🌧', 'Rain'];
+    if (code === 65) return ['🌧', 'Heavy rain'];
+    if (code === 66 || code === 67) return ['🌧', 'Freezing rain'];
+    if (code >= 71 && code <= 77) return ['❄️', 'Snow'];
+    if (code === 80) return ['🌦', 'Light showers'];
+    if (code === 81) return ['🌦', 'Showers'];
+    if (code === 82) return ['⛈', 'Heavy showers'];
+    if (code === 85 || code === 86) return ['🌨', 'Snow showers'];
+    if (code >= 95) return ['⛈', 'Thunderstorm'];
+    return ['🌡', ''];
+  }
+  function hm(s) {
+    var h = parseInt(s.substr(11, 2), 10), m = s.substr(14, 2);
+    if (H12) return (h % 12 === 0 ? 12 : h % 12) + ':' + m + ' ' + (h < 12 ? 'AM' : 'PM');
+    return pad(h) + ':' + m;
+  }
+  function compass(deg) { return ['N','NE','E','SE','S','SW','W','NW'][Math.round(deg / 45) % 8]; }
+  function uvLabel(u) { return u < 3 ? 'Low' : u < 6 ? 'Moderate' : u < 8 ? 'High' : u < 11 ? 'Very high' : 'Extreme'; }
+  function aqiInfo(a) {
+    if (a <= 50) return ['#4cd964', 'Good'];
+    if (a <= 100) return ['#ffcc00', 'Moderate'];
+    if (a <= 150) return ['#ff9500', 'Poor (sensitive)'];
+    if (a <= 200) return ['#ff3b30', 'Unhealthy'];
+    if (a <= 300) return ['#af52de', 'Very unhealthy'];
+    return ['#8e2c48', 'Hazardous'];
+  }
+  function num(v, dflt) { return (v === null || v === undefined || isNaN(v)) ? dflt : v; }
+  function tile(label, value, sub, id) {
+    return '<div class="t"' + (id ? ' id="' + id + '"' : '') + '><div class="tl">' + label + '</div><div class="tv">' + value +
+      '</div><div class="ts">' + (sub || '&nbsp;') + '</div></div>';
+  }
+
+  function getJSON(url, ok, fail) {
+    var x = new XMLHttpRequest();
+    x.open('GET', url, true);
+    x.timeout = 20000;
+    x.onreadystatechange = function () {
+      if (x.readyState !== 4) return;
+      if (x.status === 200) { try { ok(JSON.parse(x.responseText)); } catch (e) { fail(); } } else fail();
+    };
+    x.ontimeout = fail;
+    x.send();
+  }
+  // Try HTTPS first, then HTTP (iOS 9 may reject newer certificates)
+  function getBoth(q, ok, fail) { getJSON('https://' + q, ok, function () { getJSON('http://' + q, ok, fail); }); }
+
+  // ===== Weather =====
+  var lastAqi = null, lastData = null;
+
+  function loadWeather() {
+    if (!lat || !lon) return;
+    getBoth('api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon +
+      '&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl,precipitation' +
+      '&hourly=temperature_2m,weather_code,precipitation_probability,is_day,visibility,uv_index' +
+      '&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_probability_max,precipitation_sum' +
+      '&timezone=auto&forecast_days=4',
+      render, function () { $('status').innerHTML = 'Weather unavailable – retrying'; });
+    getBoth('air-quality-api.open-meteo.com/v1/air-quality?latitude=' + lat + '&longitude=' + lon + '&current=us_aqi,pm2_5&timezone=auto',
+      function (j) { lastAqi = j.current; showAqi(); }, function () {});
+  }
+
+  function showAqi() {
+    var t = $('aqi');
+    if (!t || !lastAqi || lastAqi.us_aqi === null || lastAqi.us_aqi === undefined) return;
+    var a = Math.round(lastAqi.us_aqi), ai = aqiInfo(a);
+    t.innerHTML = '<div class="tl">Air quality</div><div class="tv"><span class="dot" style="background:' + ai[0] + '"></span>' + a +
+      '</div><div class="ts">' + ai[1] + '</div>';
+  }
+
+  function render(j) {
+    lastData = j;
+    var c = j.current, d = j.daily, hr = j.hourly;
+    var info = wxInfo(c.weather_code, c.is_day === 1);
+
+    // hour index matching "now"
+    var nowKey = c.time.substr(0, 13), hIdx = 0, i;
+    for (i = 0; i < hr.time.length; i++) { if (hr.time[i].substr(0, 13) === nowKey) { hIdx = i; break; } }
+
+    $('icon').innerHTML = info[0];
+    $('temp').innerHTML = Math.round(c.temperature_2m) + '°';
+    $('cond').innerHTML = info[1];
+    $('sub').innerHTML = (placeName ? placeName + ' · ' : '') + 'H ' + Math.round(d.temperature_2m_max[0]) + '°  L ' + Math.round(d.temperature_2m_min[0]) + '°';
+
+    // ---- Info tiles ----
+    var pop = num(hr.precipitation_probability[hIdx], 0);
+    var uv = num(hr.uv_index[hIdx], 0);
+    var vis = hr.visibility ? hr.visibility[hIdx] : null;
+    var visTxt = (vis === null || vis === undefined) ? '--' : (vis >= 10000 ? '10+ km' : (vis / 1000).toFixed(1) + ' km');
+    var wd = num(c.wind_direction_10m, 0);
+    var arrow = '<span class="arr" style="-webkit-transform:rotate(' + wd + 'deg);transform:rotate(' + wd + 'deg)">↓</span>';
+
+    $('tiles').innerHTML =
+      tile('Feels like', Math.round(c.apparent_temperature) + '°', 'Actual ' + Math.round(c.temperature_2m) + '°') +
+      tile('Humidity', c.relative_humidity_2m + '%') +
+      tile('Wind', arrow + Math.round(c.wind_speed_10m) + ' km/h', 'From ' + compass(wd) + ' · Gust ' + Math.round(num(c.wind_gusts_10m, 0))) +
+      tile('Rain chance', pop + '%', 'Today ' + num(d.precipitation_sum[0], 0).toFixed(1) + ' mm') +
+      tile('UV index', Math.round(uv), uvLabel(uv) + ' · Max ' + Math.round(num(d.uv_index_max[0], 0))) +
+      tile('Air quality', '--', 'Loading', 'aqi') +
+      tile('Pressure', Math.round(num(c.pressure_msl, 0)) + ' hPa') +
+      tile('Visibility', visTxt) +
+      tile('Sunrise', hm(d.sunrise[0]), 'Tomorrow ' + hm(d.sunrise[1])) +
+      tile('Sunset', hm(d.sunset[0]), 'Tomorrow ' + hm(d.sunset[1]));
+    showAqi();
+
+    // ---- Next 12 hours (every 2h) ----
+    var html = '';
+    for (i = hIdx + 2; i <= hIdx + 12 && i < hr.time.length; i += 2) {
+      var hh = parseInt(hr.time[i].substr(11, 2), 10);
+      var lbl = H12 ? (hh % 12 === 0 ? 12 : hh % 12) + (hh < 12 ? 'am' : 'pm') : pad(hh) + ':00';
+      var p = hr.precipitation_probability[i];
+      html += '<div class="h"><div>' + lbl + '</div><div class="i">' + wxInfo(hr.weather_code[i], hr.is_day[i] === 1)[0] + '</div><div>' +
+        Math.round(hr.temperature_2m[i]) + '°</div><div class="p">' + (p >= 20 ? '💧' + p + '%' : '&nbsp;') + '</div></div>';
+    }
+    $('hours').innerHTML = html;
+
+    // ---- Next 3 days ----
+    html = '';
+    for (i = 1; i < d.time.length && i <= 3; i++) {
+      var parts = d.time[i].split('-');
+      var dow = new Date(+parts[0], +parts[1] - 1, +parts[2]).getDay();
+      var dp = d.precipitation_probability_max[i];
+      html += '<div class="d"><div>' + (i === 1 ? 'Tomorrow' : DSHORT[dow]) + '</div><div class="i">' + wxInfo(d.weather_code[i], true)[0] + '</div><div>' +
+        Math.round(d.temperature_2m_max[i]) + '° <span class="lo">' + Math.round(d.temperature_2m_min[i]) + '°</span></div><div class="p">' +
+        (dp >= 20 ? '💧' + dp + '%' : '&nbsp;') + '</div></div>';
+    }
+    $('days').innerHTML = html;
+
+    if (!FORCE_SCENE && !DEMO) setScene(sceneFor(c.weather_code, c.is_day === 1, c.time, d.sunrise[0], d.sunset[0]), c.weather_code);
+    var t = new Date();
+    if (!DEMO) $('status').innerHTML = 'Updated ' + pad(t.getHours()) + ':' + pad(t.getMinutes());
+  }
+
+  // ===== Start =====
+  function start() {
+    tick();
+    setInterval(tick, 1000);
+
+    var h = new Date().getHours();
+    if (FORCE_SCENE) setScene(FORCE_SCENE, SCENE_CODE[FORCE_SCENE] || 63);
+    else if (DEMO) {
+      var k = 0;
+      var next = function () { var s = SCENE_LIST[k % SCENE_LIST.length]; curScene = null; setScene(s, SCENE_CODE[s] || 63); $('status').innerHTML = 'Demo: ' + s; k++; };
+      next(); setInterval(next, 7000);
+    } else setScene(h >= 6 && h < 18 ? 'clear-day' : 'clear-night', 0);
+
+    if (lat && lon) loadWeather();
+    else if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function (p) {
+        lat = p.coords.latitude.toFixed(3); lon = p.coords.longitude.toFixed(3);
+        store('nc_lat', lat); store('nc_lon', lon);
+        loadWeather();
+      }, function () { $('cond').innerHTML = 'Add ?lat=..&amp;lon=..&amp;name=.. to the link'; }, { timeout: 15000 });
+    }
+    setInterval(loadWeather, WEATHER_EVERY_MIN * 60000);
+  }
+  start();
+})();
+</script>
+</body>
+</html>
