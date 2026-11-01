@@ -127,7 +127,6 @@ body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;}
 
   var $ = function (id) { return document.getElementById(id); };
   var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  var DSHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
   function rnd(a, b) { return a + Math.random() * (b - a); }
@@ -400,7 +399,7 @@ body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;}
 
     if (!FORCE_SCENE && !DEMO) setScene(sceneFor(c.weather_code, c.is_day === 1, c.time, d.sunrise[0], d.sunset[0]), c.weather_code);
     var t = new Date();
-    if (!DEMO) $('status').innerHTML = 'Updated ' + pad(t.getHours()) + ':' + pad(t.getMinutes());
+    if (!DEMO) $('status').innerHTML = 'Updated ' + pad(t.getHours()) + ':' + pad(t.getMinutes()) + ' · Weather by Open-Meteo.com';
   }
 
   // ===== Start =====
