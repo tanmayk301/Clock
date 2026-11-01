@@ -51,9 +51,9 @@ body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;}
   text-shadow:0 .2vmin 1.5vmin rgba(0,0,0,.35);-webkit-transition:color 2s;transition:color 2s;}
 .row{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;}
 .wrapr{-webkit-flex-wrap:wrap;flex-wrap:wrap;-webkit-justify-content:center;justify-content:center;}
-#time{font-size:22vmin;font-weight:100;line-height:1;letter-spacing:-.02em;}
-#ampm{font-size:4vmin;font-weight:200;margin-left:1.5vmin;-webkit-align-self:flex-end;align-self:flex-end;margin-bottom:3vmin;}
-#date{font-size:2.6vmin;font-weight:300;opacity:.85;margin-top:.3vmin;letter-spacing:.15em;text-transform:uppercase;}
+#time{font-size:29vmin;font-weight:100;line-height:1;letter-spacing:-.02em;}
+#ampm{font-size:5vmin;font-weight:200;margin-left:1.5vmin;-webkit-align-self:flex-end;align-self:flex-end;margin-bottom:3vmin;}
+#date{font-size:4vmin;font-weight:300;opacity:.9;margin-top:.8vmin;letter-spacing:.15em;text-transform:uppercase;}
 
 #now{margin-top:3vmin;font-weight:200;}
 #icon{font-size:8vmin;margin-right:2vmin;}
@@ -62,11 +62,11 @@ body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;}
 #cond{font-size:3.4vmin;font-weight:300;}
 #sub{font-size:2.2vmin;opacity:.85;}
 
-#tiles{margin-top:2.6vmin;width:96vmin;}
-.t{width:16.5vmin;margin:.6vmin;padding:1.1vmin 0;border-radius:1.6vmin;background:rgba(0,0,0,.22);text-align:center;}
-.tl{font-size:1.45vmin;letter-spacing:.12em;text-transform:uppercase;opacity:.75;}
-.tv{font-size:2.9vmin;font-weight:300;margin:.3vmin 0;white-space:nowrap;}
-.ts{font-size:1.5vmin;opacity:.75;white-space:nowrap;}
+#tiles{margin-top:2.6vmin;}
+.t{width:19vmin;margin:.7vmin;padding:1.3vmin 0;border-radius:1.6vmin;background:rgba(0,0,0,.22);text-align:center;}
+.tl{font-size:1.6vmin;letter-spacing:.12em;text-transform:uppercase;opacity:.75;}
+.tv{font-size:3.4vmin;font-weight:300;margin:.3vmin 0;white-space:nowrap;}
+.ts{font-size:1.6vmin;opacity:.75;white-space:nowrap;}
 .arr{display:inline-block;margin-right:.6vmin;}
 .dot{display:inline-block;width:1.3vmin;height:1.3vmin;border-radius:50%;margin-right:.8vmin;vertical-align:middle;}
 
@@ -398,23 +398,12 @@ body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;}
 
     // ---- Info tiles ----
     var pop = num(hr.precipitation_probability[hIdx], 0);
-    var uv = num(hr.uv_index[hIdx], 0);
-    var vis = hr.visibility ? hr.visibility[hIdx] : null;
-    var visTxt = (vis === null || vis === undefined) ? '--' : (vis >= 10000 ? '10+ km' : (vis / 1000).toFixed(1) + ' km');
-    var wd = num(c.wind_direction_10m, 0);
-    var arrow = '<span class="arr" style="-webkit-transform:rotate(' + wd + 'deg);transform:rotate(' + wd + 'deg)">↓</span>';
 
     $('tiles').innerHTML =
       tile('Feels like', Math.round(c.apparent_temperature) + '°', 'Actual ' + Math.round(c.temperature_2m) + '°') +
-      tile('Humidity', c.relative_humidity_2m + '%') +
-      tile('Wind', arrow + Math.round(c.wind_speed_10m) + ' km/h', 'From ' + compass(wd) + ' · Gust ' + Math.round(num(c.wind_gusts_10m, 0))) +
-      tile('Rain chance', pop + '%', 'Today ' + num(d.precipitation_sum[0], 0).toFixed(1) + ' mm') +
-      tile('UV index', Math.round(uv), uvLabel(uv) + ' · Max ' + Math.round(num(d.uv_index_max[0], 0))) +
       tile('Air quality', '--', 'Loading', 'aqi') +
-      tile('Pressure', Math.round(num(c.pressure_msl, 0)) + ' hPa') +
-      tile('Visibility', visTxt) +
-      tile('Sunrise', hm(d.sunrise[0]), 'Tomorrow ' + hm(d.sunrise[1])) +
-      tile('Sunset', hm(d.sunset[0]), 'Tomorrow ' + hm(d.sunset[1]));
+      tile('Humidity', c.relative_humidity_2m + '%') +
+      tile('Rain chance', pop + '%', 'Today ' + num(d.precipitation_sum[0], 0).toFixed(1) + ' mm');
     showAqi();
 
     // ---- Next 12 hours (every 2h) ----
